@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import axios from "axios";
 import * as cheerio from "cheerio";
+// import fs from "fs";
 
 const app = express();
 const port = 3001;
@@ -24,27 +25,38 @@ app.get("/scrape", async (req, res) => {
       },
     });
     console.log("Response received from target website");
-
-    const $ = cheerio.load(response.data);
+    // Initialize the result array
     const workouts = [];
 
-    $(".workout-day").each((_, element) => {
-      const name = $(element).find("h3").text().trim();
-      const duration = $(element).find(".workout-duration").text().trim();
-      const activities = [];
+    const $ = cheerio.load(response.data);
+    // write response to a file
+    $("article.workout").each((index, element) => {
+      const $article = $(element);
 
-      $(element)
-        .find(".workout-step-description")
-        .each((_, step) => {
-          activities.push({
-            description: $(step).text().trim(),
-          });
-        });
+      // Extract week and workout names from the id attribute
+      const id = $article.attr("id");
+      const [weekId, workoutId] = id.split("--");
+      const workout = workoutId?.replace(/-/g, " ");
+      const week = weekId?.replace(/-/g, " ");
 
-      workouts.push({ name, duration, activities });
+      // Initialize the workoutlist array
+      const workoutlist = [];
+
+      // Find all span elements within the workoutlist div
+      $article.find("div.workoutlist span").each((i, span) => {
+        const content = $(span).text().trim();
+        workoutlist.push(content);
+      });
+
+      // Add the workout data to the result array
+      workouts.push({
+        week,
+        workout,
+        workoutlist,
+      });
     });
 
-    console.log(`Scraped ${workouts.length} workouts`);
+    // console.log(`Scraped ${workouts.length} workouts`, workouts);
     res.json(workouts);
   } catch (error) {
     console.error("Error scraping workouts:", error);

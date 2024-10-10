@@ -1,9 +1,5 @@
-export interface WorkoutActivity {
-  description: string;
-}
-
 export interface Workout {
-  name: string;
-  duration: string;
-  activities: WorkoutActivity[];
+  week: string;
+  workout: string;
+  workoutlist: string[];
 }
